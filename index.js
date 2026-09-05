@@ -1,7 +1,8 @@
 // index.js — main bot file
 // Connects WhatsApp and routes personal-chat messages
 // to commands.js or triggers.js.
-
+console.log('whatsapp-web.js version:', require('whatsapp-web.js/package.json').version);
+console.log('Node version:', process.version);
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { handleCommand } = require('./commands');
