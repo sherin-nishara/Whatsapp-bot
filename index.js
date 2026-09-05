@@ -20,8 +20,7 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-  console.log('📱 Scan QR:');
-  qrcode.generate(qr, { small: true });
+  console.log(qr);
 });
 
 client.on('authenticated', () => {
