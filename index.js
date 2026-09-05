@@ -12,10 +12,34 @@ const { checkTriggers } = require('./triggers');
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    // These flags help Puppeteer/Chromium run on servers (like Railway)
-    // that don't have a full desktop environment.
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    // These flags help Puppeteer/Chromium run reliably on low-memory
+    // cloud containers (like Railway) that don't have a full desktop environment.
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',   // avoids crashes from Railway's small /dev/shm
+      '--disable-gpu',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',          // reduces memory footprint significantly
+    ],
   },
+});
+
+// Print a heartbeat every 30s so we can see in the logs whether the
+// process is still alive and responsive, even if WhatsApp goes quiet.
+setInterval(() => {
+  console.log(`💓 Heartbeat: process alive at ${new Date().toISOString()}`);
+}, 30000);
+
+// Catch any low-level disconnect so we know WHY the session died.
+client.on('disconnected', (reason) => {
+  console.error('⚠️ Client was disconnected:', reason);
+});
+
+client.on('auth_failure', (msg) => {
+  console.error('⚠️ Auth failure:', msg);
 });
 
 // Fires when WhatsApp needs you to log in — prints a QR code in the terminal.
@@ -69,3 +93,4 @@ client.on('message', async (msg) => {
 });
 
 client.initialize();
+                          
