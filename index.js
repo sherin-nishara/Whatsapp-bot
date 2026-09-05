@@ -9,13 +9,19 @@ const client = new Client({
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
     ],
   },
 });
 
 client.on('qr', (qr) => {
-  console.log('📱 QR TEXT:');
-  console.log(qr);
+  console.log('📱 Scan QR:');
+  qrcode.generate(qr, { small: true });
 });
 
 client.on('authenticated', () => {
@@ -23,20 +29,20 @@ client.on('authenticated', () => {
 });
 
 client.on('ready', async () => {
-  console.log('✅ Bot is online and connected to WhatsApp!');
+  console.log('✅ Bot is online and connected!');
 
   try {
-    console.log('📡 WhatsApp state:', await client.getState());
+    console.log('📡 State:', await client.getState());
   } catch (err) {
-    console.error('State check failed:', err);
+    console.error('State error:', err);
   }
 });
 
 client.on('change_state', (state) => {
-  console.log('🔄 WhatsApp state changed:', state);
+  console.log('🔄 State changed:', state);
 });
 
-client.on('message_create', async (msg) => {
+client.on('message_create', (msg) => {
   console.log('🟡 MESSAGE_CREATE:', {
     from: msg.from,
     body: msg.body,
@@ -46,29 +52,24 @@ client.on('message_create', async (msg) => {
 });
 
 client.on('message_ciphertext', (msg) => {
-  console.log('🔴 CIPHERTEXT MESSAGE:', {
+  console.log('🔴 CIPHERTEXT:', {
     from: msg.from,
     type: msg.type
   });
 });
 
 client.on('message', async (msg) => {
-  console.log('🟢 MESSAGE EVENT:', {
+  console.log('🟢 MESSAGE:', {
     from: msg.from,
     body: msg.body,
     type: msg.type
   });
 
-  if (msg.from.endsWith('@g.us')) {
-    console.log('↳ Ignored group message.');
-    return;
-  }
+  if (msg.from.endsWith('@g.us')) return;
 
   const text = msg.body.trim();
 
   if (!text) return;
-
-  console.log(`📩 Personal message from ${msg.from}: "${text}"`);
 
   try {
     if (text.startsWith('!')) {
@@ -77,7 +78,7 @@ client.on('message', async (msg) => {
       await checkTriggers(msg, text);
     }
   } catch (err) {
-    console.error('❌ Error handling message:', err);
+    console.error('❌ Handler error:', err);
   }
 });
 
