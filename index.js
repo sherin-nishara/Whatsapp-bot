@@ -38,9 +38,9 @@ client.on('ready', () => {
 
 // Fires on EVERY incoming message.
 client.on('message', async (msg) => {
-  // Ignore group chats — only respond in personal (1-on-1) chats.
-  const chat = await msg.getChat();
-  if (chat.isGroup) {
+  // Ignore group chats — group IDs always end in "@g.us".
+  // Personal chats end in "@c.us" or "@lid".
+  if (msg.from.endsWith('@g.us')) {
     return;
   }
 
