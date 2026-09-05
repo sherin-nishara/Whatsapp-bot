@@ -39,6 +39,13 @@ client.on('ready', () => {
   console.log('✅ Bot is online and connected to WhatsApp!');
 });
 
+client.on('message', (msg) => {
+  console.log('🔥🔥🔥 MESSAGE EVENT FIRED 🔥🔥🔥');
+  console.log('FROM:', msg.from);
+  console.log('BODY:', msg.body);
+  console.log('TYPE:', msg.type);
+});
+
 // Ignore group chats and handle personal chats only
 client.on('message', async (msg) => {
 
