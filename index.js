@@ -12,11 +12,9 @@ const { checkTriggers } = require('./triggers');
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
+    // These flags help Puppeteer/Chromium run on servers (like Railway)
+    // that don't have a full desktop environment.
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  },
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023940520.html',
   },
 });
 
@@ -24,6 +22,13 @@ const client = new Client({
 client.on('qr', (qr) => {
   console.log('Scan this QR code with WhatsApp (Linked Devices):');
   qrcode.generate(qr, { small: true });
+
+  // Railway's log viewer can distort the ASCII QR above.
+  // If it won't scan, copy the RAW_QR_DATA line below and paste it into:
+  // https://www.qr-code-generator.com/  (or any free QR generator)
+  // to get a clean scannable image instead.
+  console.log('RAW_QR_DATA (paste into a QR generator site if the ASCII above won\'t scan):');
+  console.log(qr);
 });
 
 // Fires once login succeeds.
