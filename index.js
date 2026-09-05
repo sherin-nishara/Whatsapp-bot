@@ -38,16 +38,26 @@ client.on('ready', () => {
 
 // Fires on EVERY incoming message.
 client.on('message', async (msg) => {
+  // Ignore group chats — only respond in personal (1-on-1) chats.
+  const chat = await msg.getChat();
+  if (chat.isGroup) {
+    return;
+  }
+
   const text = msg.body.trim();
 
   console.log(`Message from ${msg.from}: ${text}`);
 
-  if (text.startsWith('!')) {
-    // It's a command like "!ping" or "!resume"
-    await handleCommand(msg, text);
-  } else {
-    // Not a command — check if it contains a trigger word like "hi"
-    await checkTriggers(msg, text);
+  try {
+    if (text.startsWith('!')) {
+      // It's a command like "!ping" or "!resume"
+      await handleCommand(msg, text);
+    } else {
+      // Not a command — check if it contains a trigger word like "hi"
+      await checkTriggers(msg, text);
+    }
+  } catch (err) {
+    console.error('❌ Error handling message:', err);
   }
 });
 
