@@ -1,8 +1,3 @@
-// index.js — main bot file
-// Connects WhatsApp and routes personal-chat messages
-// to commands.js or triggers.js.
-console.log('whatsapp-web.js version:', require('whatsapp-web.js/package.json').version);
-console.log('Node version:', process.version);
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { handleCommand } = require('./commands');
@@ -10,47 +5,60 @@ const { checkTriggers } = require('./triggers');
 
 const client = new Client({
   authStrategy: new LocalAuth(),
-
   puppeteer: {
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
     ],
   },
-
-  webVersionCache: {
-    type: 'remote',
-    remotePath:
-      'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023940520.html',
-  },
 });
 
-// WhatsApp asks for login
 client.on('qr', (qr) => {
   console.log('📱 Scan this QR code:');
-
   qrcode.generate(qr, { small: true });
-
-  console.log('\nRAW_QR_DATA:');
-  console.log(qr);
 });
 
-// Login successful
-client.on('ready', () => {
+client.on('authenticated', () => {
+  console.log('🔐 Authenticated');
+});
+
+client.on('ready', async () => {
   console.log('✅ Bot is online and connected to WhatsApp!');
+
+  try {
+    console.log('📡 WhatsApp state:', await client.getState());
+  } catch (err) {
+    console.error('State check failed:', err);
+  }
 });
 
-client.on('message', (msg) => {
-  console.log('🔥🔥🔥 MESSAGE EVENT FIRED 🔥🔥🔥');
-  console.log('FROM:', msg.from);
-  console.log('BODY:', msg.body);
-  console.log('TYPE:', msg.type);
+client.on('change_state', (state) => {
+  console.log('🔄 WhatsApp state changed:', state);
 });
 
-// Ignore group chats and handle personal chats only
+client.on('message_create', async (msg) => {
+  console.log('🟡 MESSAGE_CREATE:', {
+    from: msg.from,
+    body: msg.body,
+    type: msg.type,
+    fromMe: msg.fromMe
+  });
+});
+
+client.on('message_ciphertext', (msg) => {
+  console.log('🔴 CIPHERTEXT MESSAGE:', {
+    from: msg.from,
+    type: msg.type
+  });
+});
+
 client.on('message', async (msg) => {
+  console.log('🟢 MESSAGE EVENT:', {
+    from: msg.from,
+    body: msg.body,
+    type: msg.type
+  });
 
-  // Ignore WhatsApp groups
   if (msg.from.endsWith('@g.us')) {
     console.log('↳ Ignored group message.');
     return;
@@ -58,19 +66,14 @@ client.on('message', async (msg) => {
 
   const text = msg.body.trim();
 
-  // Ignore empty/non-text messages
-  if (!text) {
-    return;
-  }
+  if (!text) return;
 
   console.log(`📩 Personal message from ${msg.from}: "${text}"`);
 
   try {
     if (text.startsWith('!')) {
-      // Commands: !ping, !resume, etc.
       await handleCommand(msg, text);
     } else {
-      // Normal messages: hi, hello, etc.
       await checkTriggers(msg, text);
     }
   } catch (err) {
