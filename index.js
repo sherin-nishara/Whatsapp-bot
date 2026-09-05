@@ -1,48 +1,68 @@
 // index.js — main bot file
-// This starts the WhatsApp connection, shows the QR code to scan,
-// and routes every incoming message to either commands.js or triggers.js
+// Connects WhatsApp and routes personal-chat messages
+// to commands.js or triggers.js.
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { handleCommand } = require('./commands');
 const { checkTriggers } = require('./triggers');
 
-// LocalAuth saves your login session to disk (./.wwebjs_auth)
-// so you only need to scan the QR code ONCE, not every restart.
 const client = new Client({
   authStrategy: new LocalAuth(),
+
   puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    ],
   },
+
   webVersionCache: {
     type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023940520.html',
+    remotePath:
+      'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023940520.html',
   },
 });
 
-// Fires when WhatsApp needs you to log in — prints a QR code in the terminal.
+// WhatsApp asks for login
 client.on('qr', (qr) => {
   console.log('Scan this QR code with WhatsApp (Linked Devices):');
   qrcode.generate(qr, { small: true });
 });
 
-// Fires once login succeeds.
+// Login successful
 client.on('ready', () => {
   console.log('✅ Bot is online and connected to WhatsApp!');
 });
 
-// Fires on EVERY incoming message.
+// Ignore group chats and handle personal chats only
 client.on('message', async (msg) => {
+
+  // Ignore WhatsApp groups
+  if (msg.from.endsWith('@g.us')) {
+    console.log('↳ Ignored group message.');
+    return;
+  }
+
   const text = msg.body.trim();
 
-  console.log(`Message from ${msg.from}: ${text}`);
+  // Ignore empty/non-text messages
+  if (!text) {
+    return;
+  }
 
-  if (text.startsWith('!')) {
-    // It's a command like "!ping" or "!resume"
-    await handleCommand(msg, text);
-  } else {
-    // Not a command — check if it contains a trigger word like "hi"
-    await checkTriggers(msg, text);
+  console.log(`📩 Personal message from ${msg.from}: "${text}"`);
+
+  try {
+    if (text.startsWith('!')) {
+      // Commands: !ping, !resume, etc.
+      await handleCommand(msg, text);
+    } else {
+      // Normal messages: hi, hello, etc.
+      await checkTriggers(msg, text);
+    }
+  } catch (err) {
+    console.error('❌ Error handling message:', err);
   }
 });
 
