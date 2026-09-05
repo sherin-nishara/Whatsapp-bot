@@ -26,8 +26,12 @@ const client = new Client({
 
 // WhatsApp asks for login
 client.on('qr', (qr) => {
-  console.log('Scan this QR code with WhatsApp (Linked Devices):');
+  console.log('📱 Scan this QR code:');
+
   qrcode.generate(qr, { small: true });
+
+  console.log('\nRAW_QR_DATA:');
+  console.log(qr);
 });
 
 // Login successful
