@@ -20,5 +20,20 @@ const commands = {
   //   await msg.reply('💼 Check out my portfolio: https://your-link-here.com/portfolio');
   // },
 };
-
+async function handleCommand(msg, text) {
+  const command = text.split(' ')[0].toLowerCase();
+ 
+  // !help is handled right here instead of being a separate commands entry
+  if (command === '!help') {
+    const list = Object.keys(commands).join('\n');
+    await msg.reply(`Available commands:\n!help\n${list}`);
+    return;
+  }
+ 
+  if (commands[command]) {
+    await commands[command](msg);
+  } else {
+    await msg.reply(`Unknown command "${command}". Type !help to see what I can do.`);
+  }
+}
 module.exports = { handleCommand };
