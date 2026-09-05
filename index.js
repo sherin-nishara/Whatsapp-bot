@@ -46,7 +46,14 @@ client.on('message', async (msg) => {
 
   const text = msg.body.trim();
 
-  console.log(`Message from ${msg.from}: ${text}`);
+  console.log(`Message from ${msg.from}: "${text}" | type: ${msg.type} | length: ${text.length}`);
+
+  // Skip anything that isn't a normal text message (e.g. system notifications,
+  // "you linked a device" events, protocol messages with no real content).
+  if (msg.type !== 'chat' || text.length === 0) {
+    console.log('↳ Skipping: not a normal text message.');
+    return;
+  }
 
   try {
     if (text.startsWith('!')) {
