@@ -17,7 +17,7 @@ const commands = {
   },
 
   // '!portfolio': async (msg) => {
-  //   await msg.reply('💼 Check out my portfolio: https://your-link-here.com/portfolio');
+  //   await msg.reply('Not yet, In progress');
   // },
 };
 async function handleCommand(msg, text) {
